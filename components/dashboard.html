@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Dashboard IoT | NeoMon</title>
+  
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s ease, color 0.2s ease;
+    }
+
+    /* ========== DARK MODE (default) ========== */
+    body.dark {
+      --bg-primary: #0a0f1e;
+      --bg-secondary: #111827;
+      --surface: #1f2937;
+      --surface-hover: #374151;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border: #334155;
+      --card-bg: rgba(31, 41, 55, 0.7);
+      --shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.2);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    /* ========== LIGHT MODE ========== */
+    body.light {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --surface: #ffffff;
+      --surface-hover: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border: #e2e8f0;
+      --card-bg: rgba(255, 255, 255, 0.8);
+      --shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      --accent: #2563eb;
+      --accent-glow: rgba(37,99,235,0.1);
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    /* Layout utama */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ========== SIDEBAR ========== */
+    .sidebar {
+      width: 280px;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      transition: all 0.3s;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 2.5rem;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .sidebar-brand img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .sidebar-nav a:hover, .sidebar-nav a.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .sidebar-nav a.logout {
+      margin-top: auto;
+      color: var(--danger);
+    }
+    .sidebar-nav a.logout:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    /* ========== MAIN ========== */
+    .main {
+      flex: 1;
+      padding: 2rem 2rem 2rem 2rem;
+      overflow-y: auto;
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 2rem;
+    }
+    .topbar h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    .muted {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.online { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+    }
+
+    /* Theme toggle button */
+    .theme-toggle {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 6px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      transition: 0.2s;
+    }
+    .theme-toggle:hover {
+      background: var(--surface-hover);
+    }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: var(--shadow);
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+    }
+    .stat-card small {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+    }
+    .stat-card h2 {
+      font-size: 2.5rem;
+      margin: 12px 0 8px;
+      font-weight: 700;
+    }
+    .trend {
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Dashboard grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .panel-header h3 {
+      font-size: 1.2rem;
+    }
+
+    /* Tabel */
+    .table-wrap {
+      overflow-x: auto;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .data-table th, .data-table td {
+      padding: 12px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table th {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .badge-pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-pill.ok { background: rgba(16,185,129,0.2); color: var(--success); }
+    .badge-pill.warn { background: rgba(245,158,11,0.2); color: var(--warning); }
+
+    /* Activity list */
+    .activity-list {
+      list-style: none;
+    }
+    .activity-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .activity-list small {
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app-shell { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: relative; padding: 1rem; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .main { padding: 1rem; }
+    }
+
+    /* Animasi */
+    .fa-moon, .fa-sun {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="dark">
+  <div class="app-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="img/logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/36'">
+        <span>Monitoring<strong>IoT</strong></span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="active">📊 Dashboard</a>
+        <a href="#">🌡 Sensor</a>
+        <a href="#">📈 Riwayat</a>
+        <a href="#">⚙ Pengaturan</a>
+        <a href="#" id="logoutBtn" class="logout">↩ Keluar</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Dashboard Monitoring</h1>
+          <p class="muted">Pantau sensor IoT secara realtime</p>
+        </div>
+        <div class="topbar-actions">
+          <!-- Tombol Dark/Light Mode -->
+          <button id="themeToggle" class="theme-toggle">
+            <i class="fas fa-moon"></i> <span id="themeText">Dark</span>
+          </button>
+          <div class="status-pill"><span class="dot online"></span> Terhubung</div>
+          <div class="avatar">U</div>
+        </div>
+      </header>
+
+      <!-- Stat Cards -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <small><i class="fas fa-thermometer-half"></i> Suhu</small>
+          <h2 id="statSuhu">28.5°C</h2>
+          <span class="trend"><i class="fas fa-arrow-up"></i> Normal</span>
+        </div>
+        <div class="stat-card">
+          <small><i class="fas fa-tint"></i> Kelembapan</small>
+          <h2 id="statKelembapan">71%</h2>
+          <span class="trend"><i class="fas fa-chart-line"></i> Stabil</span>
+        </div>
+        <div class="stat-card">
+          <small><i class="fas fa-gauge-high"></i> Tekanan</small>
+          <h2 id="statTekanan">1013 hPa</h2>
+          <span class="trend"><i class="fas fa-arrow-down"></i> Turun</span>
+        </div>
+        <div class="stat-card">
+          <small><i class="fas fa-sun"></i> Cahaya</small>
+          <h2 id="statCahaya">850 lx</h2>
+          <span class="trend"><i class="fas fa-arrow-up"></i> Cerah</span>
+        </div>
+      </section>
+
+      <!-- Grafik + Aktivitas -->
+      <section class="dashboard-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-chart-line"></i> Grafik Sensor</h3>
+            <select id="rangeSelect">
+              <option>24 Jam Terakhir</option>
+              <option>7 Hari</option>
+              <option>30 Hari</option>
+            </select>
+          </div>
+          <canvas id="sensorChart" height="120"></canvas>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-history"></i> Aktivitas Terbaru</h3>
+          </div>
+          <ul class="activity-list" id="activityList">
+            <li><span class="dot online"></span> Sensor A terhubung <small>2 mnt lalu</small></li>
+            <li><span class="dot warn"></span> Suhu naik di Ruang 1 <small>10 mnt lalu</small></li>
+            <li><span class="dot online"></span> Sinkronisasi data <small>15 mnt lalu</small></li>
+            <li><span class="dot off"></span> Sensor B offline <small>1 jam lalu</small></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Tabel Data -->
+      <section class="panel">
+        <div class="panel-header">
+          <h3><i class="fas fa-database"></i> Data Sensor</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Waktu</th><th>Sensor</th><th>Nilai</th><th>Status</th></tr>
+            </thead>
+            <tbody id="dataTable">
+              <tr><td>08:30</td><td>Suhu</td><td>28.5°C</td><td><span class="badge-pill ok">Normal</span></td></tr>
+              <tr><td>08:31</td><td>Kelembapan</td><td>71%</td><td><span class="badge-pill ok">Baik</span></td></tr>
+              <tr><td>08:32</td><td>Cahaya</td><td>850 lx</td><td><span class="badge-pill ok">Terang</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function() {
+      // ========== DARK / LIGHT MODE TOGGLE ==========
+      const themeToggleBtn = document.getElementById('themeToggle');
+      const themeTextSpan = document.getElementById('themeText');
+      const icon = themeToggleBtn.querySelector('i');
+      
+      function setTheme(theme) {
+        if (theme === 'light') {
+          document.body.classList.remove('dark');
+          document.body.classList.add('light');
+          localStorage.setItem('theme', 'light');
+          themeTextSpan.innerText = 'Light';
+          if(icon) icon.className = 'fas fa-sun';
+        } else {
+          document.body.classList.remove('light');
+          document.body.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+          themeTextSpan.innerText = 'Dark';
+          if(icon) icon.className = 'fas fa-moon';
+        }
+        // Trigger resize chart to fix any rendering glitch
+        if (window.sensorChartInstance) {
+          window.sensorChartInstance.resize();
+        }
+      }
+      
+      // Load saved theme
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      setTheme(savedTheme);
+      
+      themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.body.classList.contains('dark');
+        setTheme(isDark ? 'light' : 'dark');
+      });
+      
+      // ========== CHART.JS INIT ==========
+      const ctx = document.getElementById('sensorChart').getContext('2d');
+      let chart;
+      
+      function getChartData(range) {
+        if (range === '7 Hari') {
+          return {
+            labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+            suhu: [29, 30, 28, 31, 30, 29, 28],
+            kelembapan: [65, 68, 70, 72, 69, 67, 66]
+          };
+        } else if (range === '30 Hari') {
+          return {
+            labels: ['M1', 'M2', 'M3', 'M4'],
+            suhu: [28, 30, 29, 31],
+            kelembapan: [70, 68, 71, 69]
+          };
+        } else {
+          return {
+            labels: ['08:00', '09:00', '10:00', '11:00', '12:00'],
+            suhu: [28, 28.5, 29, 30, 29.5],
+            kelembapan: [72, 71, 70, 68, 69]
+          };
+        }
+      }
+      
+      function initChart(range = '24 Jam Terakhir') {
+        const data = getChartData(range);
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.labels,
+            datasets: [
+              {
+                label: 'Suhu (°C)',
+                data: data.suhu,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59,130,246,0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#3b82f6'
+              },
+              {
+                label: 'Kelembapan (%)',
+                data: data.kelembapan,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16,185,129,0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#10b981'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { position: 'bottom', labels: { color: getComputedStyle(document.body).getPropertyValue('--text-primary') } }
+            },
+            scales: {
+              y: { grid: { color: 'rgba(148,163,184,0.2)' }, ticks: { color: getComputedStyle(document.body).getPropertyValue('--text-secondary') } },
+              x: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--text-secondary') } }
+            }
+          }
+        });
+        window.sensorChartInstance = chart;
+      }
+      
+      // Init chart
+      initChart();
+      
+      // Range select event
+      const rangeSelect = document.getElementById('rangeSelect');
+      rangeSelect.addEventListener('change', (e) => {
+        initChart(e.target.value);
+      });
+      
+      // ========== LOGOUT ==========
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (confirm('Keluar dari dashboard?')) {
+            window.location.href = 'login.html';
+          }
+        });
+      }
+      
+      // ========== UPDATE STATISTIK (simulasi realtime) ==========
+      // Anda bisa ganti dengan data dari Firebase nantinya
+      function updateStatsRandom() {
+        const suhu = (28 + Math.random() * 3).toFixed(1);
+        const kelembapan = Math.floor(65 + Math.random() * 10);
+        const tekanan = 1010 + Math.floor(Math.random() * 8);
+        const cahaya = 800 + Math.floor(Math.random() * 150);
+        document.getElementById('statSuhu').innerHTML = `${suhu}°C`;
+        document.getElementById('statKelembapan').innerHTML = `${kelembapan}%`;
+        document.getElementById('statTekanan').innerHTML = `${tekanan} hPa`;
+        document.getElementById('statCahaya').innerHTML = `${cahaya} lx`;
+      }
+      // Optional: update setiap 10 detik untuk demo (komentar jika tidak ingin)
+      // setInterval(updateStatsRandom, 10000);
+      updateStatsRandom();
+      
+      // Update tabel juga bisa ditambahkan sesuai kebutuhan
+    })();
+  </script>
+</body>
+</html>
