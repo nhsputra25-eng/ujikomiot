@@ -2,52 +2,419 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>Masuk | Monitoring IoT</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/login.css" />
+  
+  <!-- Google Fonts & Font Awesome (CDN) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(ellipse at 30% 40%, #0f172a, #020617);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ===== BACKGROUND GLOW & GRID (seperti dashboard) ===== */
+    .bg-glow-1,
+    .bg-glow-2 {
+      position: fixed;
+      width: 60vw;
+      height: 60vw;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.4;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .bg-glow-1 {
+      background: radial-gradient(circle, #00e5ff 0%, transparent 70%);
+      top: -20%;
+      right: -20%;
+    }
+    .bg-glow-2 {
+      background: radial-gradient(circle, #a855f7 0%, transparent 70%);
+      bottom: -20%;
+      left: -20%;
+    }
+    .bg-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== LOGIN CONTAINER ===== */
+    .login-container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: 1rem;
+    }
+
+    /* ===== CARD GLASS ===== */
+    .login-card {
+      max-width: 460px;
+      margin: 0 auto;
+      background: rgba(18, 22, 36, 0.7);
+      backdrop-filter: blur(16px);
+      border-radius: 32px;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 229, 255, 0.05);
+      padding: 2rem 2rem 2rem 2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .login-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 229, 255, 0.3);
+    }
+
+    /* ===== HEADER ===== */
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .logo-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.2rem;
+    }
+    .main-logo {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.4));
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .login-header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, #00e5ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    .login-header p {
+      color: #8a90b5;
+      font-size: 0.9rem;
+    }
+
+    /* ===== FORM ===== */
+    .modern-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .form-control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .form-control label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #8a90b5;
+    }
+    .input-container {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #1f253a;
+      border-radius: 16px;
+      transition: all 0.2s ease;
+    }
+    .input-container:focus-within {
+      border-color: #00e5ff;
+      box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
+    }
+    .input-icon {
+      padding: 0 12px;
+      color: #5b6280;
+      font-size: 1rem;
+    }
+    .input-container input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 14px 0;
+      font-size: 0.95rem;
+      color: #eef2ff;
+      outline: none;
+    }
+    .input-container input::placeholder {
+      color: #4a4f6e;
+    }
+    .toggle-password {
+      background: transparent;
+      border: none;
+      padding: 0 12px;
+      cursor: pointer;
+      color: #5b6280;
+      transition: color 0.2s;
+    }
+    .toggle-password:hover {
+      color: #00e5ff;
+    }
+
+    /* ===== FORM ACTIONS ===== */
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #8a90b5;
+    }
+    .remember-me input {
+      display: none;
+    }
+    .custom-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 1px solid #2a3352;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.03);
+      position: relative;
+      transition: 0.2s;
+    }
+    .remember-me input:checked + .custom-checkbox::after {
+      content: "✓";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 12px;
+      color: #00e5ff;
+    }
+    .forgot-link {
+      color: #00e5ff;
+      text-decoration: none;
+      font-size: 0.8rem;
+      transition: opacity 0.2s;
+    }
+    .forgot-link:hover {
+      opacity: 0.8;
+    }
+
+    /* ===== SUBMIT BUTTON ===== */
+    .btn-submit {
+      background: linear-gradient(90deg, #0f172a, #1e293b);
+      border: 1px solid #00e5ff;
+      border-radius: 40px;
+      padding: 12px 20px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit:hover {
+      background: linear-gradient(90deg, #00e5ff, #3b5fff);
+      color: #0a0c14;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 229, 255, 0.3);
+    }
+    .btn-submit:active {
+      transform: translateY(1px);
+    }
+    .btn-submit.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .btn-submit.loading span {
+      visibility: hidden;
+    }
+    .btn-submit.loading::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ===== MESSAGE & FOOTER ===== */
+    .form-message {
+      text-align: center;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+      min-height: 40px;
+      color: #ff3d5a;
+    }
+    .login-footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #1f253a;
+    }
+    .login-footer p {
+      color: #8a90b5;
+      font-size: 0.85rem;
+    }
+    .register-link {
+      color: #00e5ff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .register-link:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 1.5rem;
+      }
+      .login-header h1 {
+        font-size: 1.5rem;
+      }
+      .form-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+    }
+  </style>
 </head>
-<body class="login-body">
-  <div class="login-wrapper">
+<body>
+
+  <!-- Background efek (sama seperti dashboard) -->
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+  <div class="bg-grid"></div>
+
+  <div class="login-container">
     <div class="login-card">
-      <div class="login-brand">
-        <img src="img/logo.png" alt="Logo" />
+      <div class="login-header">
+        <div class="logo-wrapper">
+          <img src="img/logo.png" alt="Logo" class="main-logo" onerror="this.src='https://via.placeholder.com/56'">
+        </div>
         <h1>Selamat Datang Kembali</h1>
-        <p>Masuk untuk mengakses dashboard monitoring Anda</p>
+        <p>Akses dashboard monitoring IoT Anda dalam satu klik</p>
       </div>
 
-      <form id="loginForm" class="login-form">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" placeholder="nama@email.com" required />
-        </div>
-        <div class="form-group password-group">
-          <label for="password">Password</label>
-          <div class="input-wrapper">
-            <input type="password" id="password" placeholder="••••••••" required />
-            <button type="button" class="toggle-pass-btn" onclick="togglePassword()">👁️</button>
+      <form id="loginForm" class="modern-form">
+        <div class="form-control">
+          <label for="email">Alamat Email</label>
+          <div class="input-container">
+            <span class="input-icon"><i class="fas fa-envelope"></i></span>
+            <input type="email" id="email" placeholder="nama@email.com" required autocomplete="email" />
           </div>
         </div>
-        <div class="form-row">
-          <label class="checkbox">
-            <input type="checkbox" /> Ingat saya
-          </label>
-          <a href="#" class="link">Lupa password?</a>
+        
+        <div class="form-control">
+          <label for="password">Password</label>
+          <div class="input-container">
+            <span class="input-icon"><i class="fas fa-lock"></i></span>
+            <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password" />
+            <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Lihat password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+        
+        <div class="form-actions">
+          <label class="remember-me">
+            <input type="checkbox" id="rememberCheckbox" />
+            <span class="custom-checkbox"></span>
+            Ingat saya
+          </label>
+          <a href="#" class="forgot-link">Lupa password?</a>
+        </div>
+        
+        <button type="submit" class="btn-submit" id="loginBtn">
+          <span>Masuk ke Dashboard</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
         <p id="loginMessage" class="form-message"></p>
-        <p class="form-footer">Belum punya akun? <a href="#" class="link">Daftar di sini</a></p>
       </form>
-    </div>
 
-    <div class="login-art">
-      <div class="art-content">
-        <h2>Monitoring <br/>Lebih Cerdas</h2>
-        <p>Pantau seluruh sensor IoT Anda dalam satu dashboard yang elegan dan modern.</p>
+      <div class="login-footer">
+        <p>Belum punya akun? <a href="#" class="register-link">Daftar di sini</a></p>
       </div>
     </div>
   </div>
 
+  <!-- Script untuk toggle password dan loading state (auth.js tetap dipakai) -->
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const icon = document.querySelector('.toggle-password i');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    // Tambahkan loading indicator saat submit (opsional, auth.js akan handle login)
+    const form = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        // Jangan loading duluan karena auth.js akan redirect jika sukses
+        // Tapi kita kasih feedback visual sementara
+        loginBtn.classList.add('loading');
+        // Reset loading jika login gagal (bisa ditangani di auth.js dengan event)
+        // Untuk sementara, jika setelah 3 detik masih loading, hapus (fallback)
+        setTimeout(() => {
+          if (loginBtn.classList.contains('loading')) {
+            loginBtn.classList.remove('loading');
+          }
+        }, 5000);
+      });
+    }
+  </script>
+  
+  <!-- Firebase auth.js (tetap menggunakan modul) -->
   <script type="module" src="js/auth.js"></script>
 </body>
 </html>
